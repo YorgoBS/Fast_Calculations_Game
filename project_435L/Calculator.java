@@ -4,24 +4,41 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+
+/**This class serves as the business logic for the calculations game.
+ * 
+ * @author Yorgo Bou Samra
+ * @version 1.0
+ * @since 09/10/2022
+ */
 public class Calculator {
+	
 	private int level;
 	private int firstNumber;
 	private int secondNumber;
 	private int thirdNumber;
 	private int op;
-	private List<Integer> result;
-	private List<String> expressions;
 	private HashMap<String,Integer> expMap;
 	
-	
+	/**
+	 * Default Constructor
+	 */
+	public Calculator() {
+		this.level = 1;
+		this.expMap = new HashMap<String,Integer>();
+	}
+	/**
+	 * Parameterized Constructor
+	 * @param level Level number the user wants to play. Takes values 1-3 inclusive.
+	 */
 	public Calculator(int level) {
 		this.level = level;
-		this.result = new ArrayList<Integer>();
-		this.expressions = new ArrayList<String>();
 		this.expMap = new HashMap<String,Integer>();
 }
-
+	/**
+	 * Generates the random integers that serve as the numbers in an expression. Called in the function {@link project_435L.Calculator#GenerateRandomExpression() GenerateRandomExpression}
+	 * @param divisor Tells function whether or not there is an integer division in the expression. 0 means no, 1 means the first operator, 2 means the 2nd operator
+	 */
 	public void GenerateRandomNumbers(int divisor) {
 		
 		Random rdInt = new Random();
@@ -70,30 +87,14 @@ public class Calculator {
 					this.thirdNumber = temp;
 				}
 				break;
-//			case 3:
-//				this.firstNumber = rdInt.nextInt(50)*2;
-//				this.secondNumber = rdInt.nextInt(50)*2;
-//				if(this.secondNumber ==0) {
-//					this.secondNumber = rdInt.nextInt(50)*2;
-//				}
-//				this.thirdNumber = rdInt.nextInt(50)*2;
-//				if(this.thirdNumber ==0) {
-//					this.thirdNumber = rdInt.nextInt(50)*2;
-//				}
-//				if(this.secondNumber>this.firstNumber && this.firstNumber != 0) {
-//					int temp = this.firstNumber;
-//					this.firstNumber = this.secondNumber;
-//					this.secondNumber = temp;
-//				}
-//				if(this.thirdNumber>this.secondNumber && this.secondNumber != 0) {
-//					int temp = this.secondNumber;
-//					this.secondNumber = this.thirdNumber;
-//					this.thirdNumber = temp;
-//				}
+
 			}
 		}
 	}
-	
+	/**
+	 * Function to randomly generate the full expression, including the operators.
+	 * @return Array (serving as a tuple) where the first element is the result of the expression and the second element is the expression as a String.
+	 */
 	public List<String> GenerateRandomExpression() {
 		Random rdOp = new Random();
 		int a;
@@ -125,15 +126,12 @@ public class Calculator {
 			}
 			else if(this.op == 9 || this.op == 11 || this.op == 13) {
 				GenerateRandomNumbers(2);
-
 			}
-//			if(this.op == 15) {
-//				GenerateRandomNumbers(3);
-//			}
 			else {
 				GenerateRandomNumbers(0);
 				
 			}
+			
 			a = this.firstNumber;
 			b = this.secondNumber;
 			c = this.thirdNumber;
@@ -216,26 +214,24 @@ public class Calculator {
 				expResult.add(Integer.toString(a) + "/" + Integer.toString(b) + "*" +  Integer.toString(c));
 				break;
 
-//			case 15:
-//				expResult.add(Integer.toString(a / b / c));
-//				expResult.add(Integer.toString(a) + "/" + Integer.toString(b) + "/" +  Integer.toString(c));
 			}
 					
 		}
 		
 		return expResult;
 	}
-	
-	public List<Integer> getResult() {
-		return result;
+	/**
+	 * Getter of the hashmap containing all expressions as keys and results as values.
+	 * @return HashMap containing all expressions as keys and answers as values.
+	 */
+
+	public HashMap<String, Integer> getExpMap() {
+		return expMap;
 	}
-
-
-	public List<String> getExpressions() {
-		return expressions;
-	}
-
-
+	/**
+	 * Function to generate n expressions using the {@link #GenerateRandomExpression() GenerateRandomExpression} function.
+	 * @param n An integer n representing how many expressions to generate.
+	 */
 	public void GenerateExpressionList(int n) {
 		
 		for(int i = 0;i<n;i++) {
@@ -246,12 +242,5 @@ public class Calculator {
 		}
 	}
 
-	public HashMap<String, Integer> getExpMap() {
-		return expMap;
-	}
-
-	public void setExpMap(HashMap<String, Integer> expMap) {
-		this.expMap = expMap;
-	}
 	
 }
