@@ -25,32 +25,100 @@ import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import java.awt.Color;
 
+/**
+ * GUI for QuikMafs
+ * Has a welcome page that takes you to three levels
+ * 
+ * @author Toufic Lattouf
+ * @version 1.0
+ * @since 2022-10-10
+ *
+ */
 public class GUI extends JFrame {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	/**
+	 * contentPanel is the mother panel that contains all other UI elements
+	 */
 	private JPanel contentPane;
+	/**
+	 * LayeredPanel is able to carry multiple panels at the same time. It is holding the welcoma and level pages
+	 */
 	private JLayeredPane layeredPane;
+	/**
+	 * Welcome page that shows up when the game is launched.
+	 */
 	private JPanel welcome;
+	/**
+	 * Level Page that changes depending on what level is selected
+	 */
 	private JPanel level;
+	/**
+	 * timer that launches and stops the falling animation
+	 */
 	private Timer timer;
+	/**
+	 * JLabel containing the expression to be solved
+	 */
 	private JLabel expression;
+	/**
+	 * Test Field to Input answer
+	 */
 	private JTextField answerField;
+	/**
+	 * Stores the selected user speed
+	 */
 	private Integer speed;
-	private boolean success;
+	/**
+	 * thread that runs the game
+	 */
 	private Thread game;
+	/**
+	 * flag to quit game
+	 */
 	private boolean home;
+	/**
+	 * Stores the current score
+	 */
 	private Integer score;
+	/**
+	 * selector for speed
+	 */
 	private JSlider slider;
+	/**
+	 * Stores the selected number of expressions
+	 */
 	private Integer numberOfExpressions;
+	/**
+	 * selector for number of expressions
+	 */
 	private JSpinner numberOfExpressionsSpinner;
+	/**
+	 * displays level name and number
+	 */
 	private JLabel levelName;
+	/**
+	 * displays player score
+	 */
 	private JLabel scoreLabel;
+	/**
+	 * stores player's answer
+	 */
 	private String answer;
 	
+	/**
+	 * 
+	 * @author Toufic Lattouf
+	 * Helper Listener class that updates changes in speed
+	 *
+	 */
 	class MyChangeListener implements ChangeListener {
+		/**
+		 * Default Constructor
+		 */
 	    MyChangeListener() {
 	    }
 
@@ -58,8 +126,15 @@ public class GUI extends JFrame {
 	      speed = slider.getValue();
 	    }
 	  }
-	
+	/**
+	 * 
+	 * @author Toufic Lattouf
+	 * Helper Listener class that updates changes in number of Expressions
+	 */
 	class SpinnerChangeListener implements ChangeListener {
+		/**
+		 * Default Constructor
+		 */
 		SpinnerChangeListener() {
 	    }
 
@@ -73,6 +148,8 @@ public class GUI extends JFrame {
 
 	/**
 	 * Launch the application.
+	 * @param args
+	 * the regular parameter for main
 	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -87,6 +164,135 @@ public class GUI extends JFrame {
 		});
 	}
 	
+	/**
+	 * Function executed by timer, Increments the y coordinate of the expression on loop while the timer is on
+	 * @param label
+	 * label to drop
+	 */
+	private void randomDrop(JLabel label) {
+		label.setLocation(label.getLocation().x, label.getLocation().y+speed); 
+		
+	}
+	
+	/**
+	 * Return expression to random location at the top
+	 * @param label
+	 * label is the JLabel passed
+	 */
+	private void resetToTop(JLabel label) {
+		Random random = new Random();
+		label.setLocation(random.nextInt(300), 30); 
+		
+	}
+	
+	
+	/**
+	 * takes to page
+	 * @param page
+	 * The JPanel to switch to
+	 */
+	private void goToPage(JPanel page) {
+		layeredPane.removeAll();
+		layeredPane.add(page);
+		layeredPane.repaint();
+		layeredPane.revalidate();
+		
+	}
+	
+	/**
+	 * Takes to level page and starts the thread game.
+	 * Sets home = false to indicate the game has started
+	 * @param levelNumber
+	 * the number of the level 
+	 */
+	private void goToLevel(Integer levelNumber) {
+		home = false;
+		goToPage(this.level);
+		levelName.setText("Level " + levelNumber);
+		game = new Thread(() -> {
+			startGame(levelNumber);
+		});
+		game.start();
+		
+	}
+	
+	/**
+	 * Takes you back to the welcome page
+	 * sets home = true to indicate the game has ended
+	 */
+	private void goToWelcome() {
+
+		home = true;
+		goToPage(welcome);
+	}
+	
+	/**
+	 * Starts the game.
+	 * Creates a calculator object to get the expressions needed to solve.
+	 * Starts the timer and iterates over the expressions.
+	 * If the player enters the correct answer, score is incremented,
+	 * Else the expression reaches the bottom and the player does not earn a point.
+	 * If quit game is pressed the loop is broken and we exit startGame()
+	 * 
+	 * @param level
+	 * the number of the level to start
+	 */
+	private void startGame(Integer level) { 
+		score = 0;
+		
+		Calculator calc = new Calculator(level);
+		calc.generateExpressionList(numberOfExpressions);
+		Map<String,Integer> testMap = calc.getExpMap();
+		scoreLabel.setText("Score: " + score + "/" + numberOfExpressions);
+		resetToTop(expression);
+		timer.start();
+		for (Map.Entry<String,Integer> entry : testMap.entrySet())  {
+			
+			answerField.addActionListener(e -> updateAnswer(answerField.getText()));
+			this.expression.setText(entry.getKey());
+			while(expression.getLocation().y <= 320) {
+				if(home) {
+					timer.stop();
+					score = 0;
+					break;
+				}
+				if(checkAnswer(entry.getValue())) {
+					score++;
+					scoreLabel.setText("Score: " + score + "/" + numberOfExpressions);
+					break;
+				}
+				
+			}
+			resetToTop(expression);
+			if(home) {
+				timer.stop();
+				break;
+			}
+		}
+		timer.stop();
+		displayScore();
+		return;
+	}
+
+	/**
+	 * Updates stored input.
+	 * @param text
+	 * input
+	 */
+	private void updateAnswer(String text) {
+		answer = text;
+		this.answerField.setText(null);
+	}
+
+
+	/**
+	 * displays score at the end of the game
+	 */
+	private void displayScore() {
+		expression.setLocation(181, 39);
+		expression.setText("Your score is: " + score + "/" + numberOfExpressions);
+		
+	}
 
 	/**
 	 * Create the frame.
@@ -237,8 +443,14 @@ public class GUI extends JFrame {
 		
 	}
 
-	//checks if input  equals expected answer
-	private boolean checkAnswer(Integer actual) {
+	/**
+	 * 	checks if input  equals expected answer
+	 * @param actual
+	 * the correct answer
+	 * @return
+	 * returns true if the inputed answer is correct
+	 */
+		private boolean checkAnswer(Integer actual) {
 		try {
 		if(answer == null || answer.equals("")) {
 			return false;
@@ -256,101 +468,5 @@ public class GUI extends JFrame {
 		
 	}
 
-	//Function executed by timer
-	private void randomDrop(JLabel label) {
-		label.setLocation(label.getLocation().x, label.getLocation().y+speed); 
-		
-	}
-	
-	//Return expression to random location at the top
-	private void resetToTop(JLabel label) {
-		Random random = new Random();
-		label.setLocation(random.nextInt(300), 30); 
-		
-	}
-	
-	
-	//takes to page
-	private void goToPage(JPanel page) {
-		layeredPane.removeAll();
-		layeredPane.add(page);
-		layeredPane.repaint();
-		layeredPane.revalidate();
-		
-	}
-	
-	//Takes to level page
-	private void goToLevel(Integer levelNumber) {
-		home = false;
-		goToPage(this.level);
-		levelName.setText("Level " + levelNumber);
-		game = new Thread(() -> {
-			startGame(levelNumber);
-		});
-		game.start();
-		
-	}
-	
-	private void goToWelcome() {
-//		try {
-//			game.join();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
-		home = true;
-		goToPage(welcome);
-		//game.stop();
-		
-	}
-	
-	//Starts the game
-	private void startGame(Integer level) { 
-		score = 0;
-		
-		Calculator calc = new Calculator(level);
-		calc.GenerateExpressionList(numberOfExpressions);
-		Map<String,Integer> testMap = calc.getExpMap();
-		scoreLabel.setText("Score: " + score + "/" + numberOfExpressions);
-		resetToTop(expression);
-		timer.start();
-		for (Map.Entry<String,Integer> entry : testMap.entrySet())  {
-			success = false;
-			answerField.addActionListener(e -> updateAnswer(answerField.getText()));
-			this.expression.setText(entry.getKey());
-			while(expression.getLocation().y <= 320) {
-				if(home) {
-					timer.stop();
-					score = 0;
-					break;
-				}
-				if(checkAnswer(entry.getValue())) {
-					score++;
-					scoreLabel.setText("Score: " + score + "/" + numberOfExpressions);
-					break;
-				}
-				
-			}
-			resetToTop(expression);
-			if(home) {
-				timer.stop();
-				break;
-			}
-		}
-		timer.stop();
-		displayScore();
-		return;
-	}
 
-	private void updateAnswer(String text) {
-		answer = text;
-		this.answerField.setText(null);
-	}
-
-
-	//displays score at the end of the game
-	private void displayScore() {
-		expression.setLocation(181, 39);
-		expression.setText("Your score is: " + score + "/" + numberOfExpressions);
-		
-	}
 }
